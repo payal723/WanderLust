@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ejs</title>
+</head>
+<style>
+    h4 {
+        color: crimson;
+        font-size: 2rem;
+        font-family: cursive;
+    }
+
+    .flash-message {
+        padding: 1rem;
+        color: darkgreen;
+        border: 1px solid rgb(226, 229, 226);
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+</style>
+
+<body>
+
+    <% if(success && success.length) { %>
+        <div class="flash-message">
+            <%= success %>
+        </div>
+        <% } %>
+      
+           
+                    <h1>hello <%= name %>
+                    </h1>
+                    <h4>Welcome to Our Page...</h4>
+
+</body>
+
+</html>

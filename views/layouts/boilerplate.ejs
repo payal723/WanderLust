@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WanderLust</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+
+  <!-- Starability CSS -->
+  <link rel="stylesheet" type="text/css" href="/css/starability-basic.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <!-- Responsive CSS -->
+  <style>
+    /* Mobile First Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 15px;
+      }
+      
+      /* Navbar responsive */
+      .navbar-brand {
+        font-size: 1.2rem;
+      }
+      
+      .navbar-nav .nav-link {
+        padding: 0.5rem 1rem;
+      }
+      
+      /* Search functionality */
+      .search-popup .search-content {
+        width: 95%;
+        margin: 20px auto;
+        padding: 20px;
+      }
+      
+      .search-fields {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .search-field {
+        min-width: 100%;
+      }
+      
+      /* Cards responsive */
+      .card {
+        margin-bottom: 20px;
+      }
+      
+      .card-img-top {
+        height: 200px;
+        object-fit: cover;
+      }
+      
+      /* Buttons */
+      .btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+      
+      /* Forms */
+      .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+      
+      /* Listings grid */
+      .row .col-md-4,
+      .row .col-lg-3 {
+        margin-bottom: 20px;
+      }
+      
+      /* Footer */
+      .footer {
+        text-align: center;
+        padding: 20px 0;
+      }
+      
+      .footer .row {
+        flex-direction: column;
+      }
+      
+      /* Notification dropdown */
+      .notification-dropdown {
+        width: 90vw;
+        right: 5vw;
+        left: 5vw;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      /* Extra small devices */
+      .container {
+        padding: 0 10px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+      }
+      
+      h3 {
+        font-size: 1.3rem;
+      }
+      
+      .card-title {
+        font-size: 1.1rem;
+      }
+      
+      .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+      }
+      
+      /* Search popup full screen on mobile */
+      .search-popup .search-content {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+        border-radius: 0;
+      }
+      
+      /* Counter buttons */
+      .counter-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+      }
+    }
+    
+    /* Tablet styles */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .container {
+        max-width: 95%;
+      }
+      
+      .card-img-top {
+        height: 220px;
+      }
+    }
+    
+    /* General responsive utilities */
+    .img-fluid {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Responsive text */
+    @media (max-width: 768px) {
+      .display-1 { font-size: 2.5rem; }
+      .display-2 { font-size: 2rem; }
+      .display-3 { font-size: 1.75rem; }
+      .display-4 { font-size: 1.5rem; }
+    }
+    
+    /* Touch-friendly buttons */
+    @media (max-width: 768px) {
+      .btn, .nav-link, .dropdown-item {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+    }
+    
+    /* Responsive tables */
+    @media (max-width: 768px) {
+      .table-responsive {
+        border: none;
+      }
+      
+      .table {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('../includes/navbar.ejs') %>
+
+  <div class="container mt-4">
+    <%- include('../includes/flash.ejs') %>
+    <%- body %>
+  </div>
+
+  <%- include('../includes/footer.ejs') %>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom JS -->
+  <script src="/js/script.js"></script>
+
+  <!-- Application Scripts -->
+  <script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      
+      /* ----- NAVBAR SCROLL EFFECT ----- */
+      const mainNav = document.getElementById('mainNav');
+      if (mainNav) {
+        window.addEventListener('scroll', () => {
+          mainNav.classList.toggle('scrolled', window.scrollY > 20);
+        });
+      }
+
+      /* ----- SEARCH POPUP FUNCTIONALITY ----- */
+      const searchPopup = document.getElementById('searchPopup');
+      if (searchPopup) {
+        // Open search popup
+        document.querySelectorAll('.search-btn, .search-icon').forEach(btn => {
+          btn.addEventListener('click', () => {
+            searchPopup.classList.add('show');
+          });
+        });
+
+        // Close search popup
+        const closeSearchBtn = document.getElementById('closeSearch');
+        if (closeSearchBtn) {
+          closeSearchBtn.addEventListener('click', () => {
+            searchPopup.classList.remove('show');
+          });
+        }
+        
+        // Close popup when clicking outside
+        searchPopup.addEventListener('click', (e) => {
+          if (e.target === searchPopup) {
+            searchPopup.classList.remove('show');
+          }
+        });
+      }
+
+      /* ----- SEARCH PANEL FUNCTIONALITY ----- */
+      const searchPanel = document.getElementById('searchPanel');
+      if (searchPanel) {
+        // Open search panel
+        const openSearchBtn = document.getElementById('openSearch');
+        if (openSearchBtn) {
+          openSearchBtn.addEventListener('click', () => {
+            searchPanel.classList.add('show');
+          });
+        }
+
+        // Close search panel
+        const closeSearchPanelBtn = document.getElementById('closeSearch');
+        if (closeSearchPanelBtn) {
+          closeSearchPanelBtn.addEventListener('click', () => {
+            searchPanel.classList.remove('show');
+          });
+        }
+      }
+
+      /* ----- SUGGESTED PLACES ----- */
+      const whereInput = document.getElementById('whereInput');
+      if (whereInput) {
+        document.querySelectorAll('.place-tag').forEach(tag => {
+          tag.addEventListener('click', () => {
+            whereInput.value = tag.dataset.place;
+          });
+        });
+      }
+
+      /* ----- GUEST COUNTERS ----- */
+      const counters = { adults: 0, children: 0, infants: 0, pets: 0 };
+      
+      const counterButtons = document.querySelectorAll('.counter-btn');
+      if (counterButtons.length > 0) {
+        counterButtons.forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.preventDefault();
+            const type = btn.dataset.type;
+            const direction = btn.dataset.dir;
+            
+            if (direction === 'plus') {
+              counters[type]++;
+            } else if (counters[type] > 0) {
+              counters[type]--;
+            }
+            
+            // Update counter display
+            const counterElement = document.getElementById(type);
+            if (counterElement) {
+              counterElement.textContent = counters[type];
+            }
+            
+            updateWhoPill();
+          });
+        });
+      }
+
+      /* ----- UPDATE WHO PILL DISPLAY ----- */
+      function updateWhoPill() {
+        const totalGuests = counters.adults + counters.children;
+        const parts = [];
+        
+        if (totalGuests) {
+          parts.push(`${totalGuests} guest${totalGuests > 1 ? 's' : ''}`);
+        }
+        if (counters.infants) {
+          parts.push(`${counters.infants} infant${counters.infants > 1 ? 's' : ''}`);
+        }
+        if (counters.pets) {
+          parts.push(`${counters.pets} pet${counters.pets > 1 ? 's' : ''}`);
+        }
+        
+        const displayValue = parts.join(', ') || 'Add guests';
+        const whoValueElement = document.querySelector('[data-field="who"] .value');
+        
+        if (whoValueElement) {
+          whoValueElement.textContent = displayValue;
+        }
+      }
+
+      /* ----- CLEAR ALL SEARCH FILTERS ----- */
+      const clearBtn = document.getElementById('clearBtn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          // Reset counters
+          Object.keys(counters).forEach(key => {
+            counters[key] = 0;
+          });
+          
+          // Reset counter displays
+          document.querySelectorAll('.counter-val').forEach(element => {
+            element.textContent = '0';
+          });
+          
+          // Clear input fields
+          if (whereInput) {
+            whereInput.value = '';
+          }
+          
+          // Clear date inputs
+          document.querySelectorAll('input[type="date"]').forEach(input => {
+            input.value = '';
+          });
+          
+          updateWhoPill();
+        });
+      }
+
+      /* ----- SEARCH FORM SUBMISSION ----- */
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', () => {
+          const whereValue = whereInput ? whereInput.value.trim() : '';
+          const checkinInput = document.querySelector('input[name="checkin"]');
+          const checkoutInput = document.querySelector('input[name="checkout"]');
+          
+          const checkinValue = checkinInput ? checkinInput.value : '';
+          const checkoutValue = checkoutInput ? checkoutInput.value : '';
+          const totalGuests = counters.adults + counters.children + counters.infants;
+          
+          // Build query parameters
+          const queryParams = new URLSearchParams();
+          
+          if (whereValue) {
+            queryParams.set('where', whereValue);
+          }
+          if (checkinValue) {
+            queryParams.set('checkin', checkinValue);
+          }
+          if (checkoutValue) {
+            queryParams.set('checkout', checkoutValue);
+          }
+          if (totalGuests) {
+            queryParams.set('guests', totalGuests);
+          }
+          
+          // Redirect to listings page with search parameters
+          window.location.href = '/listings?' + queryParams.toString();
+        });
+      }
+
+
+
+      /* ----- INITIALIZE WISHLIST STATUS ----- */
+      initializeWishlistStatus();
+      
+      /* ----- INITIALIZE NOTIFICATION BADGE ----- */
+      if (document.querySelector('.notification-btn')) {
+        initializeNotificationBadge();
+      }
+
+      console.log('WanderLust scripts loaded successfully!');
+    });
+
+    /* ----- WISHLIST FUNCTIONALITY ----- */
+    async function toggleWishlist(event, listingId) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const heartBtn = event.currentTarget;
+      const isLiked = heartBtn.classList.contains('liked');
+      
+      try {
+        const url = isLiked ? `/wishlist/remove/${listingId}` : `/wishlist/add/${listingId}`;
+        const method = isLiked ? 'DELETE' : 'POST';
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          heartBtn.classList.toggle('liked');
+          
+          // Update notification badge after wishlist action
+          if (document.querySelector('.notification-btn')) {
+            updateNotificationBadge();
+          }
+        } else {
+          console.error('Wishlist operation failed:', data.message);
+        }
+      } catch (error) {
+        console.error('Error toggling wishlist:', error);
+      }
+    }
+
+    /* ----- WISHLIST STATUS INITIALIZATION ----- */
+    async function initializeWishlistStatus() {
+      const heartBtns = document.querySelectorAll('.heart-btn[data-listing-id]');
+      
+      for (const btn of heartBtns) {
+        const listingId = btn.dataset.listingId;
+        try {
+          const response = await fetch(`/wishlist/check/${listingId}`);
+          const data = await response.json();
+          
+          if (data.inWishlist) {
+            btn.classList.add('liked');
+          }
+        } catch (error) {
+          console.error('Error checking wishlist status:', error);
+        }
+      }
+    }
+
+    /* ----- NOTIFICATION BADGE FUNCTIONALITY ----- */
+    async function initializeNotificationBadge() {
+      try {
+        const response = await fetch('/notifications/unread-count');
+        const data = await response.json();
+        updateBadgeDisplay(data.count || 0);
+      } catch (error) {
+        console.error('Error fetching notification count:', error);
+      }
+    }
+
+    async function updateNotificationBadge() {
+      try {
+        const response = await fetch('/notifications/unread-count');
+        const data = await response.json();
+        updateBadgeDisplay(data.count || 0);
+      } catch (error) {
+        console.error('Error updating notification count:', error);
+      }
+    }
+
+    function updateBadgeDisplay(count) {
+      const badge = document.getElementById('notificationBadge');
+      const mobileBadge = document.getElementById('mobileNotificationBadge');
+      
+      if (badge) {
+        if (count > 0) {
+          badge.textContent = count > 99 ? '99+' : count;
+          badge.style.display = 'block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      
+      if (mobileBadge) {
+        if (count > 0) {
+          mobileBadge.textContent = count > 99 ? '99+' : count;
+          mobileBadge.style.display = 'block';
+        } else {
+          mobileBadge.style.display = 'none';
+        }
+      }
+    }
+
+    /* ----- NOTIFICATION PANEL FUNCTIONALITY ----- */
+    async function loadNotifications() {
+      try {
+        const response = await fetch('/notifications/api');
+        const data = await response.json();
+        displayNotifications(data.notifications || []);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
+    }
+
+    function displayNotifications(notifications) {
+      const container = document.getElementById('notificationsList');
+      if (!container) return;
+
+      if (notifications.length === 0) {
+        container.innerHTML = '<div class="no-notifications">No notifications</div>';
+        return;
+      }
+
+      container.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.isRead ? 'read' : 'unread'}" data-id="${notification._id}">
+          <div class="notification-content">
+            <h4>${notification.title}</h4>
+            <p>${notification.message}</p>
+            <small>${new Date(notification.createdAt).toLocaleDateString()}</small>
+          </div>
+          ${!notification.isRead ? '<div class="unread-dot"></div>' : ''}
+        </div>
+      `).join('');
+
+      // Add click handlers for notifications
+      container.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => markNotificationAsRead(item.dataset.id));
+      });
+    }
+
+    async function markNotificationAsRead(notificationId) {
+      try {
+        await fetch(`/notifications/${notificationId}/read`, {
+          method: 'PATCH'
+        });
+        updateNotificationBadge();
+        loadNotifications();
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
+
+    /* ----- NOTIFICATION DROPDOWN TOGGLE ----- */
+    const notificationBtn = document.querySelector('.notification-btn');
+    const notificationDropdown = document.querySelector('.notification-dropdown');
+    
+    if (notificationBtn && notificationDropdown) {
+      notificationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('show');
+        if (notificationDropdown.classList.contains('show')) {
+          loadNotifications();
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', () => {
+        notificationDropdown.classList.remove('show');
+      });
+
+      notificationDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+
+
+
+    // Update notification badge periodically
+    setInterval(() => {
+      if (document.querySelector('.notification-btn')) {
+        updateNotificationBadge();
+      }
+    }, 30000);
+
+    /* ----- ACCOUNT PAGE FUNCTIONALITY ----- */
+    function initializeAccountPage() {
+      const editProfileBtn = document.querySelector('.account-actions .btn-outline-primary');
+      if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', toggleProfileEdit);
+      }
+
+      const settingBtns = document.querySelectorAll('.setting-item .btn-outline-secondary');
+      settingBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+          if (index === 1) window.location.href = '/settings';
+        });
+      });
+
+      const deleteBtn = document.querySelector('.setting-item.danger .btn-outline-danger');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', deleteAccount);
+      }
+
+      document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+          toggleFieldEdit(this);
+        });
+      });
+
+      // Profile photo upload
+      const userAvatar = document.querySelector('.user-avatar');
+      if (userAvatar) {
+        userAvatar.addEventListener('click', triggerPhotoUpload);
+      }
+    }
+
+    function toggleProfileEdit() {
+      const userDetails = document.querySelector('.user-details');
+      const editBtn = document.querySelector('.account-actions .btn-outline-primary');
+      
+      if (!userDetails || !editBtn) return;
+
+      const isEditing = editBtn.textContent.includes('Save');
+      
+      if (isEditing) {
+        const username = document.getElementById('editUsername')?.value;
+        const email = document.getElementById('editEmail')?.value;
+        
+        if (username && email) {
+          updateProfile({ username, email });
+        }
+      } else {
+        const currentUsername = userDetails.querySelector('h1').textContent;
+        const currentEmail = userDetails.querySelector('.user-email').textContent;
+        
+        userDetails.innerHTML = `
+          <div class="edit-form">
+            <div class="form-group mb-3">
+              <label for="editUsername">Username</label>
+              <input type="text" id="editUsername" value="${currentUsername}" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="editEmail">Email</label>
+              <input type="email" id="editEmail" value="${currentEmail}" class="form-control">
+            </div>
+          </div>
+        `;
+        
+        editBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      }
+    }
+
+    async function updateProfile(data) {
+      try {
+        const formData = new FormData();
+        formData.append('username', data.username);
+        formData.append('email', data.email);
+        
+        const response = await fetch('/update-profile', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          const userDetails = document.querySelector('.user-details');
+          const editBtn = document.querySelector('.account-actions .btn-outline-primary');
+          
+          userDetails.innerHTML = `
+            <h1>${data.username}</h1>
+            <p class="user-email">${data.email}</p>
+            <p class="member-since">Member since ${new Date().getFullYear()}</p>
+          `;
+          
+          editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit Profile';
+          showNotification('Profile updated successfully!', 'success');
+        } else {
+          showNotification('Failed to update profile', 'error');
+        }
+      } catch (error) {
+        console.error('Profile update error:', error);
+        showNotification('Error updating profile', 'error');
+      }
+    }
+
+    function triggerPhotoUpload() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = handlePhotoUpload;
+      input.click();
+    }
+
+    async function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('profilePhoto', file);
+      
+      try {
+        const response = await fetch('/update-profile', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showNotification('Profile photo updated successfully!', 'success');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showNotification('Failed to update profile photo', 'error');
+        }
+      } catch (error) {
+        console.error('Photo upload error:', error);
+        showNotification('Error uploading photo', 'error');
+      }
+    }
+
+    function togglePasswordForm() {
+      const form = document.getElementById('passwordForm');
+      if (!form) return;
+      
+      if (form.style.display === 'none' || !form.style.display) {
+        form.style.display = 'block';
+      } else {
+        form.style.display = 'none';
+        form.querySelectorAll('input').forEach(input => input.value = '');
+      }
+    }
+
+    function toggleFieldEdit(btn) {
+      const input = btn.previousElementSibling;
+      if (!input) return;
+      
+      if (input.readOnly) {
+        input.readOnly = false;
+        input.focus();
+        btn.textContent = 'Save';
+      } else {
+        input.readOnly = true;
+        btn.textContent = 'Edit';
+        showNotification('Field updated successfully!', 'success');
+      }
+    }
+
+    function deleteAccount() {
+      if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        showNotification('Account deletion feature will be implemented soon!', 'info');
+      }
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.innerHTML = `<span>${message}</span><button onclick="this.parentNode.remove()" style="margin-left:10px;background:none;border:none;color:inherit;cursor:pointer;">&times;</button>`;
+      
+      notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+        border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+        border-radius: 8px; padding: 12px 16px; max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      `;
+      
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 5000);
+    }
+
+    /* ----- ACCOUNT PAGE FUNCTIONALITY ----- */
+    initializeAccountPage();
+
+    // Make functions globally available
+    window.toggleWishlist = toggleWishlist;
+    window.initializeWishlistStatus = initializeWishlistStatus;
+    window.initializeNotificationBadge = initializeNotificationBadge;
+    window.updateNotificationBadge = updateNotificationBadge;
+    window.togglePasswordForm = togglePasswordForm;
+    window.deleteAccount = deleteAccount;
+
+  </script>
+</body>
+</html>

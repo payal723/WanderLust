@@ -1,0 +1,616 @@
+<% layout('/layouts/boilerplate') %>
+
+<div class="account-container">
+  <!-- Account Header -->
+  <div class="account-header">
+    <div class="user-info">
+      <div class="user-avatar" onclick="document.getElementById('profilePhotoInput').click()">
+        <% if (user.profilePhoto && user.profilePhoto.url) { %>
+          <img src="<%= user.profilePhoto.url %>" alt="Profile Photo" class="profile-img">
+        <% } else { %>
+          <i class="fas fa-user"></i>
+        <% } %>
+        <div class="photo-upload-overlay">
+          <i class="fas fa-camera"></i>
+        </div>
+      </div>
+      <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;" onchange="uploadProfilePhoto(this)">
+      <div class="user-details">
+        <h1><%= user.username %></h1>
+        <p class="user-email"><%= user.email || 'No email' %></p>
+        <p class="member-since">Member since <%= new Date(user.createdAt || Date.now()).getFullYear() %></p>
+      </div>
+    </div>
+    <div class="account-actions">
+      <button class="btn btn-outline-primary">
+        <i class="fas fa-edit"></i>
+        Edit Profile
+      </button>
+    </div>
+  </div>
+
+  <!-- Account Stats -->
+  <div class="account-stats">
+    <div class="stat-card">
+      <div class="stat-number"><%= (userListings && userListings.length) || 0 %></div>
+      <div class="stat-label">Listings</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= (userReviews && userReviews.length) || 0 %></div>
+      <div class="stat-label">Reviews</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">0</div>
+      <div class="stat-label">Bookings</div>
+    </div>
+  </div>
+
+  <!-- Account Sections -->
+  <div class="account-sections">
+    <!-- My Listings -->
+    <div class="section">
+      <div class="section-header">
+        <h2>My Listings</h2>
+        <a href="/listings/new" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          Add New Listing
+        </a>
+      </div>
+      
+      <% if (userListings && userListings.length > 0) { %>
+        <div class="listings-grid">
+          <% for (let listing of userListings) { %>
+            <div class="listing-card">
+              <div class="listing-image">
+                <img src="<%= listing.image.url %>" alt="<%= listing.title %>">
+              </div>
+              <div class="listing-info">
+                <h3><%= listing.title %></h3>
+                <p class="listing-location">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <%= listing.location %>
+                </p>
+                <p class="listing-price">₹<%= listing.price.toLocaleString() %> / night</p>
+                <div class="listing-actions">
+                  <a href="/listings/<%= listing._id %>" class="btn btn-sm btn-outline-primary">View</a>
+                  <a href="/listings/<%= listing._id %>/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <i class="fas fa-home"></i>
+          <h3>No listings yet</h3>
+          <p>Start hosting by creating your first listing</p>
+          <a href="/listings/new" class="btn btn-primary">Create Listing</a>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- My Reviews -->
+    <div class="section">
+      <div class="section-header">
+        <h2>My Reviews</h2>
+      </div>
+      
+      <% if (userReviews && userReviews.length > 0) { %>
+        <div class="reviews-list">
+          <% for (let review of userReviews) { %>
+            <div class="review-card">
+              <div class="review-header">
+                <div class="review-listing">
+                  <h4><%= review.listing ? review.listing.title : 'Deleted Listing' %></h4>
+                  <div class="review-rating">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                      <i class="fas fa-star <%= i <= review.rating ? 'filled' : '' %>"></i>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="review-date">
+                  <%= new Date(review.createdAt).toLocaleDateString() %>
+                </div>
+              </div>
+              <p class="review-comment"><%= review.comment %></p>
+            </div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <i class="fas fa-star"></i>
+          <h3>No reviews yet</h3>
+          <p>Your reviews will appear here after you stay at properties</p>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Account Settings -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Account Settings</h2>
+      </div>
+      
+      <div class="settings-list">
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Personal Information</h4>
+            <p>Update your name, email, and other details</p>
+          </div>
+          <button class="btn btn-outline-secondary">Edit</button>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Password</h4>
+            <p>Change your account password</p>
+          </div>
+          <button class="btn btn-outline-secondary">Change</button>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Notifications</h4>
+            <p>Manage your notification preferences</p>
+          </div>
+          <button class="btn btn-outline-secondary">Manage</button>
+        </div>
+        
+        <div class="setting-item danger">
+          <div class="setting-info">
+            <h4>Delete Account</h4>
+            <p>Permanently delete your account and all data</p>
+          </div>
+          <button class="btn btn-outline-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.account-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fe424d, #ff6b6b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.photo-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 50%;
+}
+
+.user-avatar:hover .photo-upload-overlay {
+  opacity: 1;
+}
+
+.photo-upload-overlay i {
+  color: white;
+  font-size: 20px;
+}
+
+.user-details h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 8px 0;
+}
+
+.user-email {
+  color: #717171;
+  font-size: 1.1rem;
+  margin: 0 0 4px 0;
+}
+
+.member-since {
+  color: #717171;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.account-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fe424d;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: #717171;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+}
+
+.account-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.section {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.listing-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.listing-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.listing-image {
+  height: 200px;
+  overflow: hidden;
+}
+
+.listing-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.listing-info {
+  padding: 16px;
+}
+
+.listing-info h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 8px 0;
+}
+
+.listing-location {
+  color: #717171;
+  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.listing-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 16px 0;
+}
+
+.listing-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.review-listing h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 4px 0;
+}
+
+.review-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.review-rating i {
+  color: #ddd;
+  font-size: 14px;
+}
+
+.review-rating i.filled {
+  color: #ffd700;
+}
+
+.review-date {
+  color: #717171;
+  font-size: 0.875rem;
+}
+
+.review-comment {
+  color: #222;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+}
+
+.setting-item.danger {
+  border-color: #fee;
+  background: #fefefe;
+}
+
+.setting-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 4px 0;
+}
+
+.setting-info p {
+  color: #717171;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #717171;
+}
+
+.empty-state i {
+  font-size: 64px;
+  margin-bottom: 20px;
+  color: #ddd;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background: #fe424d;
+  color: white;
+  border-color: #fe424d;
+}
+
+.btn-primary:hover {
+  background: #e63946;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #fe424d;
+  border-color: #fe424d;
+}
+
+.btn-outline-primary:hover {
+  background: #fe424d;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  background: #6c757d;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background: #dc3545;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .account-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .account-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .listings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .setting-item {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}
+</style>
+
+<script>
+function uploadProfilePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const formData = new FormData();
+  formData.append('profilePhoto', file);
+  
+  // Show loading
+  const avatar = document.querySelector('.user-avatar');
+  const overlay = avatar.querySelector('.photo-upload-overlay');
+  overlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  
+  fetch('/update-profile', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert('Failed to update profile photo');
+      overlay.innerHTML = '<i class="fas fa-camera"></i>';
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error uploading photo');
+    overlay.innerHTML = '<i class="fas fa-camera"></i>';
+  });
+}
+</script>
+</style>

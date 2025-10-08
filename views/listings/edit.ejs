@@ -1,0 +1,183 @@
+<% layout('layouts/boilerplate') %>
+
+  <div class="container mt-5">
+    <h3 class="mb-4 text-center">Edit Your Listing</h3>
+
+    <form method="POST" action="/listings/<%= listing._id %>?_method=PUT " class="needs-validation" enctype="multipart/form-data" novalidate>
+      <!-- Title -->
+      <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input id="title" name="listing[title]" value="<%= listing.title %>" type="text" class="form-control"
+          required />
+        <div class="valid-feedback">Title Looks Good!</div>
+
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" name="listing[description]" class="form-control" rows="3"
+          required><%= listing.description %></textarea>
+        <div class="invalid-feedback">Please enter the discription</div>
+      </div>
+
+      <!-- Images -->
+      <div class="mb-3">
+        <label for="images" class="form-label">Upload New Images (Max 5)</label>
+        <input type="file" class="form-control" id="images" name="listing[images]" multiple accept="image/*,.avif,.webp" onchange="previewImages(this)">
+        <div class="form-text">Select up to 5 images. Leave empty to keep existing images.</div>
+        <div id="imagePreview" class="image-preview-container mt-3"></div>
+        
+        <!-- Current Images -->
+        <% if (listing.images && listing.images.length > 0) { %>
+          <div class="current-images mt-3">
+            <h6>Current Images:</h6>
+            <div class="current-images-grid">
+              <% listing.images.forEach((img, index) => { %>
+                <div class="current-image-item">
+                  <img src="<%= img.url %>" alt="Current <%= index + 1 %>">
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        <% } else if (listing.image && listing.image.url) { %>
+          <div class="current-images mt-3">
+            <h6>Current Image:</h6>
+            <div class="current-image-item">
+              <img src="<%= listing.image.url %>" alt="Current image">
+            </div>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Price -->
+      <div class="mb-3">
+        <label for="price" class="form-label">Price</label>
+        <input id="price" name="listing[price]" value="<%= listing.price %>" type="number" class="form-control"
+          required />
+        <div class="invalid-feedback">Price should be valid!</div>
+      </div>
+
+      <!-- Country -->
+      <div class="mb-3">
+        <label for="country" class="form-label">Country</label>
+        <input id="country" name="listing[country]" value="<%= listing.country %>" type="text" class="form-control"
+          required />
+        <div class="invalid-feedback">Country name should be valid</div>
+
+      </div>
+
+      <!-- Location -->
+      <div class="mb-3">
+        <label for="location" class="form-label">Location</label>
+        <input id="location" name="listing[location]" value="<%= listing.location %>" type="text" class="form-control"
+          required />
+        <div class="invalid-feedback">Location should be valid</div>
+
+      </div>
+
+      <!-- Submit Button -->
+      <button class="btn btn-primary">Update Listing</button>
+    </form>
+  </div>
+
+<style>
+.image-preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #dc3545;
+}
+
+.current-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.current-image-item {
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+}
+
+.current-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+</style>
+
+<script>
+function previewImages(input) {
+    const previewContainer = document.getElementById('imagePreview');
+    previewContainer.innerHTML = '';
+    
+    if (input.files && input.files.length > 0) {
+        if (input.files.length > 5) {
+            alert('Maximum 5 images allowed');
+            input.value = '';
+            return;
+        }
+        
+        Array.from(input.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview ${index + 1}">
+                    <button type="button" class="remove-btn" onclick="removeImage(${index})">&times;</button>
+                `;
+                previewContainer.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function removeImage(index) {
+    const input = document.getElementById('images');
+    const dt = new DataTransfer();
+    
+    Array.from(input.files).forEach((file, i) => {
+        if (i !== index) {
+            dt.items.add(file);
+        }
+    });
+    
+    input.files = dt.files;
+    previewImages(input);
+}
+</script>

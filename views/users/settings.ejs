@@ -1,0 +1,396 @@
+<% layout('/layouts/boilerplate') %>
+
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>Settings</h1>
+    <p>Manage your account preferences and privacy settings</p>
+  </div>
+
+  <div class="settings-sections">
+    <!-- Profile Settings -->
+    <div class="settings-section">
+      <h2>Profile Information</h2>
+      <div class="setting-item">
+        <label>Username</label>
+        <input type="text" value="<%= currUser.username %>" readonly>
+        <button class="btn-edit">Edit</button>
+      </div>
+      <div class="setting-item">
+        <label>Email</label>
+        <input type="email" value="<%= currUser.email %>" readonly>
+        <button class="btn-edit">Edit</button>
+      </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="settings-section">
+      <h2>Notifications</h2>
+      <div class="setting-toggle">
+        <label>Email notifications</label>
+        <input type="checkbox" class="toggle" checked>
+      </div>
+      <div class="setting-toggle">
+        <label>Push notifications</label>
+        <input type="checkbox" class="toggle" checked>
+      </div>
+      <div class="setting-toggle">
+        <label>Marketing emails</label>
+        <input type="checkbox" class="toggle">
+      </div>
+    </div>
+
+    <!-- Privacy Settings -->
+    <div class="settings-section">
+      <h2>Privacy</h2>
+      <div class="setting-toggle">
+        <label>Profile visibility</label>
+        <input type="checkbox" class="toggle" checked>
+      </div>
+      <div class="setting-toggle">
+        <label>Show online status</label>
+        <input type="checkbox" class="toggle" checked>
+      </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="settings-section">
+      <h2>Security</h2>
+      <div class="setting-item">
+        <label>Password</label>
+        <button class="btn-secondary" onclick="togglePasswordForm()">Change Password</button>
+      </div>
+      
+      <!-- Password Change Form -->
+      <div id="passwordForm" class="password-form" style="display: none;">
+        <form action="/change-password" method="POST" class="password-change-form" id="passwordChangeForm">
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" name="currentPassword" required>
+          </div>
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" name="newPassword" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Update Password</button>
+            <button type="button" class="btn-secondary" onclick="togglePasswordForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+      
+      <div class="setting-item">
+        <label>Two-factor authentication</label>
+        <button class="btn-secondary">Enable 2FA</button>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-section danger-zone">
+      <h2>Danger Zone</h2>
+      <div class="setting-item">
+        <label>Delete Account</label>
+        <p>Once you delete your account, there is no going back.</p>
+        <button class="btn-danger">Delete Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.settings-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.settings-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.settings-header p {
+  color: #717171;
+  font-size: 1.1rem;
+}
+
+.settings-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item label {
+  font-weight: 600;
+  color: #222;
+  flex: 1;
+}
+
+.setting-item input {
+  flex: 2;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-right: 12px;
+}
+
+.setting-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.setting-toggle:last-child {
+  border-bottom: none;
+}
+
+.setting-toggle label {
+  font-weight: 600;
+  color: #222;
+}
+
+.toggle {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  appearance: none;
+  background: #ddd;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.toggle:checked {
+  background: #fe424d;
+}
+
+.toggle::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.toggle:checked::before {
+  transform: translateX(26px);
+}
+
+.btn-edit, .btn-secondary {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-edit:hover, .btn-secondary:hover {
+  background: #f7f7f7;
+  border-color: #222;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.danger-zone {
+  border: 1px solid #fee;
+  background: #fefefe;
+}
+
+.danger-zone h2 {
+  color: #dc3545;
+}
+
+.password-form {
+  margin-top: 16px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #222;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-primary {
+  background: #fe424d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #e63946;
+}
+
+@media (max-width: 768px) {
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .setting-item input {
+    width: 100%;
+    margin-right: 0;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Toggle switches
+  document.querySelectorAll('.toggle').forEach(toggle => {
+    toggle.addEventListener('change', function() {
+      console.log(`${this.previousElementSibling.textContent}: ${this.checked}`);
+    });
+  });
+  
+  // Edit buttons
+  document.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = this.previousElementSibling;
+      if (input.readOnly) {
+        input.readOnly = false;
+        input.focus();
+        this.textContent = 'Save';
+      } else {
+        input.readOnly = true;
+        this.textContent = 'Edit';
+        // Here you would save to backend
+        console.log('Saving:', input.value);
+      }
+    });
+  });
+  
+  // Delete account
+  document.querySelector('.btn-danger').addEventListener('click', function() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      alert('Account deletion feature coming soon!');
+    }
+  });
+  
+  // Password form validation
+  const passwordForm = document.getElementById('passwordChangeForm');
+  if (passwordForm) {
+    passwordForm.addEventListener('submit', function(e) {
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      
+      if (!currentPassword) {
+        e.preventDefault();
+        alert('Please enter your current password!');
+        return false;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        e.preventDefault();
+        alert('New passwords do not match!');
+        return false;
+      }
+      
+      if (newPassword.length < 6) {
+        e.preventDefault();
+        alert('Password must be at least 6 characters long!');
+        return false;
+      }
+    });
+  }
+});
+
+function togglePasswordForm() {
+  const form = document.getElementById('passwordForm');
+  if (form.style.display === 'none') {
+    form.style.display = 'block';
+  } else {
+    form.style.display = 'none';
+    // Clear form fields
+    form.querySelectorAll('input').forEach(input => input.value = '');
+  }
+}
+</script>

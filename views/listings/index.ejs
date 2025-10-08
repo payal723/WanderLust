@@ -1,0 +1,745 @@
+<% layout('/layouts/boilerplate') -%>
+
+<body>
+  <% if (allListings.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-home"></i>
+      <h3>No listings found</h3>
+      <p>Be the first to add a listing to this amazing platform!</p>
+      <a href="/listings/new" class="btn">Add Your First Listing</a>
+    </div>
+  <% } else { %>
+  <div class="container-fluid px-4">
+
+    <div class="category-filters mb-4">
+      <div class="filter-scroll">
+        <button class="category-btn active" data-category="all">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M28 2H4a2 2 0 0 0-2 2v24a2 2 0 0 0 2 2h24a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM4 28V4h24v24z"></path>
+            <path d="M8 12h16v2H8zm0 4h16v2H8zm0 4h10v2H8z"></path>
+          </svg>
+          All
+        </button>
+        <button class="category-btn" data-category="amazing-views">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M16 1l4 8h8l-6 6 2 8-8-4-8 4 2-8-6-6h8z"></path>
+          </svg>
+          Amazing views
+        </button>
+        <button class="category-btn" data-category="beachfront">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M26 2H6a2 2 0 0 0-2 2v24a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path>
+          </svg>
+          Beachfront
+        </button>
+        <button class="category-btn" data-category="cabins">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M16 2l-4 8H4l6 6-2 8 8-4 8 4-2-8 6-6h-8z"></path>
+          </svg>
+          Cabins
+        </button>
+        <button class="category-btn" data-category="towers">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M8 2h16v28H8z"></path>
+          </svg>
+          Towers
+        </button>
+        <button class="category-btn" data-category="countryside">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M16 3l13 13v13H3V16z"></path>
+          </svg>
+          Countryside
+        </button>
+        <button class="category-btn" data-category="trending">
+          <svg width="24" height="24" viewBox="0 0 32 32">
+            <path d="M2 16l6-6v4h8V8l6 6-6 6v-4H8v6z"></path>
+          </svg>
+          Trending
+        </button>
+      </div>
+    </div> 
+    
+    <!-- Listings Grid -->
+    <div class="listings-grid">
+      <% for (let listing of allListings) { %>
+        <div class="listing-card">
+          <div class="listing-image-container">
+            <a href="/listings/<%= listing._id %>" class="listing-link">
+              <img src="<%= listing.image.url %>" class="listing-image" alt="<%= listing.title %>" 
+                   onerror="this.src='https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=60'">
+            </a>
+            <% if (currUser) { %>
+              <button class="heart-btn" data-listing-id="<%= listing._id %>" onclick="toggleWishlist(event, '<%= listing._id %>')">
+                <svg width="24" height="24" viewBox="0 0 32 32">
+                  <path d="M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.58.68-4.95 2.05L16 8.108l-2.05-2.058A6.976 6.976 0 0 0 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z"></path>
+                </svg>
+              </button>
+            <% } %>
+            <div class="image-overlay">
+              <div class="quick-actions">
+                <button class="quick-view-btn" onclick="quickView('<%= listing._id %>')">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <% if(currUser && listing.owner && currUser._id.toString() === listing.owner._id.toString()) { %>
+                  <a href="/listings/<%= listing._id %>/edit" class="quick-edit-btn">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                <% } %>
+              </div>
+            </div>
+          </div>
+          <div class="listing-content">
+            <div class="listing-header">
+              <a href="/listings/<%= listing._id %>" class="listing-title-link">
+                <h3 class="listing-title"><%= listing.title %></h3>
+              </a>
+              <div class="listing-rating">
+                <% if(listing.reviews && listing.reviews.length > 0) { %>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M6 0l1.545 3.13L11 3.635 8.5 6.07l.59 3.44L6 8.13 2.91 9.51l.59-3.44L1 3.635l3.455-.505z"></path>
+                  </svg>
+                  <span><%= (listing.reviews.reduce((acc, review) => acc + review.rating, 0) / listing.reviews.length).toFixed(1) %></span>
+                <% } else { %>
+                  <span class="new-badge">New</span>
+                <% } %>
+              </div>
+            </div>
+            <p class="listing-location">
+              <i class="fas fa-map-marker-alt"></i>
+              <%= listing.location %>, <%= listing.country %>
+            </p>
+            <p class="listing-description"><%= listing.description.substring(0, 80) %>...</p>
+            <div class="listing-footer">
+              <div class="listing-price">
+                <strong>₹<%= listing.price.toLocaleString("en-IN") %></strong>
+                <span class="price-period">/ night</span>
+              </div>
+              <div class="listing-stats">
+                <% if(listing.reviews && listing.reviews.length > 0) { %>
+                  <span class="review-count"><%= listing.reviews.length %> reviews</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+</body>
+
+<script>
+function quickView(listingId) {
+  window.open(`/listings/${listingId}`, '_blank');
+}
+
+// Enhanced functionality
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Ensure listing links work properly
+  document.querySelectorAll('.listing-link, .listing-title-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      // Don't prevent default - let the link work normally
+      console.log('Navigating to:', this.href);
+    });
+  });
+  
+  // Prevent heart button clicks from triggering listing navigation
+  document.querySelectorAll('.heart-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  });
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  const listingCards = document.querySelectorAll('.listing-card');
+  
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      categoryBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      const category = this.dataset.category;
+      filterListings(category);
+    });
+  });
+  
+  function filterListings(category) {
+    listingCards.forEach(card => {
+      if (category === 'all') {
+        card.style.display = 'block';
+        card.style.animation = 'fadeIn 0.3s ease';
+      } else {
+        // Simple filtering based on description/title keywords
+        const title = card.querySelector('.listing-title').textContent.toLowerCase();
+        const description = card.querySelector('.listing-description').textContent.toLowerCase();
+        const location = card.querySelector('.listing-location').textContent.toLowerCase();
+        
+        let shouldShow = false;
+        
+        switch(category) {
+          case 'amazing-views':
+            shouldShow = title.includes('view') || description.includes('view') || 
+                        title.includes('mountain') || description.includes('mountain') ||
+                        title.includes('scenic') || description.includes('scenic');
+            break;
+          case 'beachfront':
+            shouldShow = title.includes('beach') || description.includes('beach') ||
+                        location.includes('beach') || title.includes('ocean') ||
+                        description.includes('ocean') || location.includes('goa');
+            break;
+          case 'cabins':
+            shouldShow = title.includes('cabin') || description.includes('cabin') ||
+                        title.includes('cottage') || description.includes('cottage') ||
+                        title.includes('hut') || description.includes('hut');
+            break;
+          case 'towers':
+            shouldShow = title.includes('tower') || description.includes('tower') ||
+                        title.includes('high-rise') || description.includes('apartment') ||
+                        title.includes('penthouse') || description.includes('skyscraper');
+            break;
+          case 'countryside':
+            shouldShow = title.includes('farm') || description.includes('farm') ||
+                        title.includes('rural') || description.includes('countryside') ||
+                        location.includes('village') || description.includes('nature');
+            break;
+          case 'trending':
+            shouldShow = Math.random() > 0.5; // Random for demo
+            break;
+        }
+        
+        if (shouldShow) {
+          card.style.display = 'block';
+          card.style.animation = 'fadeIn 0.3s ease';
+        } else {
+          card.style.display = 'none';
+        }
+      }
+    });
+  }
+  
+  // Smooth scroll for category filters
+  const filterScroll = document.querySelector('.filter-scroll');
+  if (filterScroll) {
+    let isDown = false;
+    let startX, scrollLeft;
+    
+    filterScroll.addEventListener('mousedown', (e) => {
+      isDown = true;
+      startX = e.pageX - filterScroll.offsetLeft;
+      scrollLeft = filterScroll.scrollLeft;
+    });
+    
+    filterScroll.addEventListener('mouseleave', () => isDown = false);
+    filterScroll.addEventListener('mouseup', () => isDown = false);
+    
+    filterScroll.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - filterScroll.offsetLeft;
+      const walk = (x - startX) * 2;
+      filterScroll.scrollLeft = scrollLeft - walk;
+    });
+  }
+  
+  // Scroll to top
+  const scrollTopBtn = document.createElement('button');
+  scrollTopBtn.className = 'scroll-top';
+  scrollTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+  document.body.appendChild(scrollTopBtn);
+  
+  window.addEventListener('scroll', () => {
+    scrollTopBtn.classList.toggle('show', window.pageYOffset > 300);
+  });
+  
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  
+  // Add new listing button
+  const fab = document.createElement('a');
+  fab.href = '/listings/new';
+  fab.className = 'fab';
+  fab.innerHTML = '<i class="fas fa-plus"></i>';
+  fab.title = 'Add New Listing';
+  document.body.appendChild(fab);
+});
+</script>
+
+<style>
+  /* Body base styling */
+  body {
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+  }
+
+
+
+  /* Category Filters */
+  .category-filters {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 16px;
+  }
+
+  .filter-scroll {
+    display: flex;
+    gap: 32px;
+    overflow-x: auto;
+    padding: 8px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .filter-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #717171;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 12px 8px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+    position: relative;
+  }
+
+  .category-btn:hover,
+  .category-btn.active {
+    color: #222;
+  }
+
+  .category-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 2px;
+    background: #222;
+  }
+
+  .category-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+
+  /* Listings Grid */
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+    padding: 32px 0;
+  }
+
+  .listing-card {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .listing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .listing-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .listing-image-container {
+    position: relative;
+    overflow: hidden;
+    height: 280px;
+  }
+
+  .listing-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .listing-card:hover .listing-image {
+    transform: scale(1.08);
+  }
+
+  .heart-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+  }
+
+  .heart-btn:hover {
+    background: white;
+    transform: scale(1.1);
+  }
+
+  .heart-btn svg {
+    fill: none;
+    stroke: #222;
+    stroke-width: 1.5;
+    transition: all 0.2s ease;
+  }
+
+  .heart-btn.liked svg {
+    fill: #fe424d;
+    stroke: #fe424d;
+  }
+
+  .image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .listing-card:hover .image-overlay {
+    opacity: 1;
+  }
+
+  .quick-actions {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .quick-view-btn,
+  .quick-edit-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #222;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .quick-view-btn:hover,
+  .quick-edit-btn:hover {
+    background: white;
+    transform: scale(1.1);
+    color: #fe424d;
+  }
+
+  .listing-content {
+    padding: 20px;
+  }
+
+  .listing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .listing-title-link {
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+    margin-right: 12px;
+  }
+
+  .listing-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
+    margin: 0;
+    line-height: 1.3;
+    transition: color 0.2s ease;
+  }
+
+  .listing-title-link:hover .listing-title {
+    color: #fe424d;
+  }
+
+  .listing-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: #222;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+
+  .listing-rating svg {
+    fill: #ffd700;
+  }
+
+  .new-badge {
+    background: #fe424d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .listing-location {
+    color: #717171;
+    font-size: 14px;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .listing-location i {
+    color: #fe424d;
+    font-size: 12px;
+  }
+
+  .listing-description {
+    color: #717171;
+    font-size: 14px;
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .listing-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .listing-price {
+    font-size: 16px;
+    color: #222;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .listing-price strong {
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .price-period {
+    color: #717171;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .listing-stats {
+    font-size: 12px;
+    color: #717171;
+  }
+
+  .review-count {
+    font-weight: 500;
+  }
+
+  /* Loading States */
+  .listing-card.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .listing-card.loading .listing-image {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #717171;
+  }
+
+  .empty-state i {
+    font-size: 64px;
+    margin-bottom: 24px;
+    color: #ddd;
+  }
+
+  .empty-state h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 12px;
+  }
+
+  .empty-state p {
+    font-size: 16px;
+    margin-bottom: 24px;
+  }
+
+  .empty-state .btn {
+    background: #fe424d;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.2s ease;
+  }
+
+  .empty-state .btn:hover {
+    background: #e63946;
+    color: white;
+    text-decoration: none;
+  }
+
+  /* Floating Action Button */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background: #fe424d;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(254, 66, 77, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(254, 66, 77, 0.4);
+  }
+
+  /* Scroll to top button */
+  .scroll-top {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    color: #222;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+
+  .scroll-top.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .scroll-top:hover {
+    background: white;
+    transform: translateY(-2px);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .listings-grid {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      padding: 24px 0;
+    }
+
+    .listing-image-container {
+      height: 240px;
+    }
+
+    .category-filters {
+      margin: 0 -16px;
+      padding: 0 16px 16px;
+    }
+
+    .filter-scroll {
+      gap: 24px;
+    }
+
+    .listing-content {
+      padding: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .listings-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .listing-image-container {
+      height: 220px;
+    }
+
+    .listing-card {
+      border-radius: 12px;
+    }
+  }
+</style>

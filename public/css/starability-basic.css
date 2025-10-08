@@ -1,0 +1,52 @@
+/* ===== STAR RATING SYSTEM ===== */
+.star-rating {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 2rem;
+}
+
+.star-rating input[type="radio"] {
+  display: none;
+}
+
+.star-rating label {
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s;
+  font-size: 2rem;
+}
+
+.star-rating label::before {
+  content: "★";
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star-rating input[type="radio"]:checked ~ label::before,
+.star-rating label:hover::before,
+.star-rating label:hover ~ label::before {
+  color: #ffd700;
+}
+
+/* Review Display Stars */
+.review-rating .fas.fa-star.filled {
+  color: #ffd700 !important;
+}
+
+.review-rating .fas.fa-star {
+  color: #ddd !important;
+  margin-right: 2px;
+}
+
+.rating .fas.fa-star {
+  color: #ffd700 !important;
+  margin-right: 4px;
+}
+
+.rating-info .fas.fa-star {
+  color: #ffd700 !important;
+  margin-right: 4px;
+}

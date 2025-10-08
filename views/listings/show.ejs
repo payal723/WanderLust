@@ -1,0 +1,447 @@
+<% layout('/layouts/boilerplate') %>
+
+<div class="container mt-3">
+  <!-- Back Button -->
+  <div class="mb-3">
+    <a href="/listings" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left"></i> Back to Listings
+    </a>
+  </div>
+
+  <!-- Title and Info -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1 class="mb-2"><%= listing.title %></h1>
+      <div class="d-flex align-items-center gap-3 mb-2">
+        <% if(listing.reviews && listing.reviews.length > 0) { %>
+          <span class="text-warning">
+            <i class="fas fa-star"></i>
+            <%= (listing.reviews.reduce((acc, review) => acc + review.rating, 0) / listing.reviews.length).toFixed(1) %>
+            (<%= listing.reviews.length %> reviews)
+          </span>
+        <% } else { %>
+          <span class="badge bg-primary">New</span>
+        <% } %>
+        <span class="text-muted">
+          <i class="fas fa-map-marker-alt"></i>
+          <%= listing.location %>, <%= listing.country %>
+        </span>
+      </div>
+    </div>
+    <div class="col-md-4 text-end">
+      <button class="btn btn-outline-secondary btn-sm me-2">
+        <i class="fas fa-share"></i> Share
+      </button>
+      <button class="btn btn-outline-danger btn-sm">
+        <i class="far fa-heart"></i> Save
+      </button>
+    </div>
+  </div>
+
+  <!-- Image -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <% const mainImage = (listing.images && listing.images.length > 0) ? listing.images[0].url : listing.image.url; %>
+      <img src="<%= mainImage %>" alt="<%= listing.title %>" class="img-fluid rounded" style="height: 400px; width: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80'">
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+      <!-- Host Info -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <%= listing.owner.username.charAt(0).toUpperCase() %>
+              </div>
+            </div>
+            <div>
+              <h5 class="mb-1">Hosted by <%= listing.owner.username %></h5>
+              <small class="text-muted">Superhost • Joined 2024</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">About this place</h5>
+          <p class="card-text"><%= listing.description %></p>
+        </div>
+      </div>
+
+      <!-- Amenities -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Amenities</h5>
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <i class="fas fa-utensils me-2"></i> Kitchen
+            </div>
+            <div class="col-md-6 mb-2">
+              <i class="fas fa-wifi me-2"></i> Wifi
+            </div>
+            <div class="col-md-6 mb-2">
+              <i class="fas fa-snowflake me-2"></i> AC
+            </div>
+            <div class="col-md-6 mb-2">
+              <i class="fas fa-car me-2"></i> Parking
+            </div>
+            <div class="col-md-6 mb-2">
+              <i class="fas fa-tv me-2"></i> TV
+            </div>
+            <div class="col-md-6 mb-2">
+              <i class="fas fa-swimming-pool me-2"></i> Pool
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Location</h5>
+          <p class="text-muted mb-3"><%= listing.location %>, <%= listing.country %></p>
+          <div id="map" style="height: 300px; border-radius: 8px;"></div>
+          <div id="map-fallback" class="bg-light p-4 text-center rounded" style="display: none; height: 300px;">
+            <i class="fas fa-map-marker-alt fa-3x text-primary mb-3"></i>
+            <h5><%= listing.location %></h5>
+            <p class="text-muted"><%= listing.country %></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Owner Actions -->
+      <% if(currUser && listing.owner && currUser._id.toString() === listing.owner._id.toString()) { %>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Manage Listing</h5>
+            <a href="/listings/<%= listing._id %>/edit" class="btn btn-primary me-2">
+              <i class="fas fa-edit"></i> Edit
+            </a>
+            <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
+              <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this listing?')">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Reviews -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <% if(listing.reviews && listing.reviews.length > 0) { %>
+            <h5 class="card-title">
+              <i class="fas fa-star text-warning"></i>
+              <%= (listing.reviews.reduce((acc, review) => acc + review.rating, 0) / listing.reviews.length).toFixed(1) %>
+              (<%= listing.reviews.length %> reviews)
+            </h5>
+            <div class="row">
+              <% for(let review of listing.reviews.slice(0, 6)) { %>
+                <div class="col-md-6 mb-3">
+                  <div class="border-bottom pb-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div class="d-flex align-items-center">
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-size: 14px;">
+                          <%= review.author.username.charAt(0).toUpperCase() %>
+                        </div>
+                        <div>
+                          <h6 class="mb-0"><%= review.author.username %></h6>
+                          <small class="text-muted"><%= new Date(review.createdAt).toLocaleDateString() %></small>
+                        </div>
+                      </div>
+                      <% if(currUser && (currUser._id.toString() === review.author._id.toString() || (listing.owner && currUser._id.toString() === listing.owner._id.toString()))) { %>
+                        <form method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" class="d-inline">
+                          <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete review?')">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                    <div class="mb-2">
+                      <% for(let i = 1; i <= 5; i++) { %>
+                        <i class="fas fa-star <%= i <= review.rating ? 'text-warning' : 'text-muted' %>"></i>
+                      <% } %>
+                    </div>
+                    <p class="mb-0"><%= review.comment %></p>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          <% } %>
+
+          <!-- Add Review -->
+          <% if(currUser) { %>
+            <hr>
+            <h6>Leave a Review</h6>
+            <form action="/listings/<%= listing._id %>/reviews" method="POST">
+              <div class="mb-3">
+                <label class="form-label">Rating</label>
+                <div class="star-rating">
+                  <input type="radio" id="s5" name="review[rating]" value="5" required>
+                  <label for="s5">★</label>
+                  <input type="radio" id="s4" name="review[rating]" value="4">
+                  <label for="s4">★</label>
+                  <input type="radio" id="s3" name="review[rating]" value="3">
+                  <label for="s3">★</label>
+                  <input type="radio" id="s2" name="review[rating]" value="2">
+                  <label for="s2">★</label>
+                  <input type="radio" id="s1" name="review[rating]" value="1">
+                  <label for="s1">★</label>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="comment" class="form-label">Comment</label>
+                <textarea name="review[comment]" id="comment" class="form-control" rows="3" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Booking -->
+    <div class="col-lg-4">
+      <div class="card sticky-top" style="top: 20px;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h4 class="mb-0">₹<%= listing.price.toLocaleString("en-IN") %></h4>
+              <small class="text-muted">per night</small>
+            </div>
+            <% if(listing.reviews && listing.reviews.length > 0) { %>
+              <div class="text-end">
+                <i class="fas fa-star text-warning"></i>
+                <span><%= (listing.reviews.reduce((acc, review) => acc + review.rating, 0) / listing.reviews.length).toFixed(1) %></span>
+                <small class="text-muted">(<%= listing.reviews.length %>)</small>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="mb-3">
+            <div class="row">
+              <div class="col-6">
+                <label class="form-label">Check-in</label>
+                <input type="date" class="form-control" id="checkin" onchange="calculateTotal()">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Check-out</label>
+                <input type="date" class="form-control" id="checkout" onchange="calculateTotal()">
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Guests</label>
+            <select class="form-select">
+              <option>1 guest</option>
+              <option>2 guests</option>
+              <option>3 guests</option>
+              <option>4+ guests</option>
+            </select>
+          </div>
+          
+          <button class="btn btn-primary w-100 mb-3" onclick="makeReservation()">
+            Reserve Now
+          </button>
+          
+          <p class="text-center text-muted small mb-3">You won't be charged yet</p>
+          
+          <div class="border-top pt-3">
+            <div class="d-flex justify-content-between mb-2" id="nightsRow" style="display: none !important;">
+              <span id="nightsText">₹<%= listing.price.toLocaleString("en-IN") %> × 0 nights</span>
+              <span id="nightsPrice">₹0</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Cleaning fee</span>
+              <span>₹2,000</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Service fee</span>
+              <span>₹1,500</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between fw-bold">
+              <span>Total</span>
+              <span id="totalPrice">₹<%= (listing.price + 3500).toLocaleString("en-IN") %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize map after page loads
+  setTimeout(initializeMap, 1000);
+  
+  function initializeMap() {
+    console.log('🗺️ Initializing map...');
+    
+    <% if(listing.geometry && listing.geometry.coordinates && listing.geometry.coordinates.length === 2) { %>
+      const coordinates = <%- JSON.stringify(listing.geometry.coordinates) %>;
+      const lng = parseFloat(coordinates[0]);
+      const lat = parseFloat(coordinates[1]);
+      
+      console.log('📍 Map data:', {
+        location: '<%= listing.location %>',
+        coordinates: { lat, lng },
+        leafletLoaded: typeof L !== 'undefined'
+      });
+      
+      // Check if Leaflet is loaded
+      if (typeof L === 'undefined') {
+        console.error('❌ Leaflet library not loaded');
+        showMapFallback();
+        return;
+      }
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.error('❌ Invalid coordinates');
+        showMapFallback();
+        return;
+      }
+      
+      try {
+        const mapElement = document.getElementById('map');
+        if (!mapElement) {
+          console.error('❌ Map container not found');
+          showMapFallback();
+          return;
+        }
+        
+        // Clear any existing map
+        mapElement.innerHTML = '';
+        
+        // Initialize map
+        const map = L.map('map', {
+          center: [lat, lng],
+          zoom: 13,
+          scrollWheelZoom: false,
+          zoomControl: true
+        });
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 18
+        }).addTo(map);
+        
+        // Add marker
+        const marker = L.marker([lat, lng]).addTo(map);
+        
+        // Add popup
+        marker.bindPopup(`
+          <div style="text-align: center; padding: 8px; font-family: inherit;">
+            <strong style="color: #222;"><%= listing.title %></strong><br>
+            <span style="color: #666; font-size: 14px;"><%= listing.location %>, <%= listing.country %></span>
+          </div>
+        `);
+        
+        // Add area circle
+        L.circle([lat, lng], {
+          color: '#fe424d',
+          fillColor: '#fe424d',
+          fillOpacity: 0.1,
+          radius: 1000
+        }).addTo(map);
+        
+        console.log('✅ Map loaded successfully!');
+        
+        // Hide fallback
+        const fallbackElement = document.getElementById('map-fallback');
+        if (fallbackElement) {
+          fallbackElement.style.display = 'none';
+        }
+        
+      } catch (error) {
+        console.error('❌ Map initialization error:', error);
+        showMapFallback();
+      }
+    <% } else { %>
+      console.log('ℹ️ No coordinates available for this listing');
+      showMapFallback();
+    <% } %>
+  }
+  
+  function showMapFallback() {
+    const mapElement = document.getElementById('map');
+    const fallbackElement = document.getElementById('map-fallback');
+    
+    if (mapElement) mapElement.style.display = 'none';
+    if (fallbackElement) fallbackElement.style.display = 'flex';
+    
+    console.log('📍 Showing location fallback');
+  }
+  
+  // Set minimum dates for booking
+  const today = new Date().toISOString().split('T')[0];
+  const checkinInput = document.getElementById('checkin');
+  const checkoutInput = document.getElementById('checkout');
+  
+  if (checkinInput) checkinInput.min = today;
+  if (checkoutInput) checkoutInput.min = today;
+});
+
+function calculateTotal() {
+  const checkin = document.getElementById('checkin').value;
+  const checkout = document.getElementById('checkout').value;
+  const pricePerNight = <%= listing.price %>;
+  
+  if (checkin && checkout) {
+    const checkinDate = new Date(checkin);
+    const checkoutDate = new Date(checkout);
+    
+    if (checkoutDate <= checkinDate) {
+      document.getElementById('checkout').value = '';
+      alert('Check-out date must be after check-in date');
+      return;
+    }
+    
+    const timeDiff = checkoutDate.getTime() - checkinDate.getTime();
+    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    const subtotal = pricePerNight * nights;
+    const cleaningFee = 2000;
+    const serviceFee = 1500;
+    const total = subtotal + cleaningFee + serviceFee;
+    
+    document.getElementById('nightsRow').style.display = 'flex';
+    document.getElementById('nightsText').textContent = `₹${pricePerNight.toLocaleString('en-IN')} × ${nights} night${nights > 1 ? 's' : ''}`;
+    document.getElementById('nightsPrice').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    document.getElementById('totalPrice').textContent = `₹${total.toLocaleString('en-IN')}`;
+    
+    // Update checkout minimum date
+    const nextDay = new Date(checkinDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    document.getElementById('checkout').min = nextDay.toISOString().split('T')[0];
+  } else {
+    document.getElementById('nightsRow').style.display = 'none';
+    document.getElementById('totalPrice').textContent = 'Select dates to see total';
+  }
+}
+
+function makeReservation() {
+  const checkin = document.getElementById('checkin').value;
+  const checkout = document.getElementById('checkout').value;
+  
+  if (!checkin || !checkout) {
+    alert('Please select check-in and check-out dates');
+    return;
+  }
+  
+  alert('Reservation feature coming soon!');
+}
+</script>
+</div>

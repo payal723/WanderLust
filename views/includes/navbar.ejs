@@ -1,0 +1,969 @@
+<!-- Clean Advanced Navbar -->
+<nav id="mainNav" class="navbar navbar-expand-lg bg-white sticky-top">
+  <div class="container-fluid px-4">
+    <!-- Logo/Brand -->
+    <a class="navbar-brand d-flex align-items-center" href="/listings">
+      <div class="brand-icon">
+        <i class="fas fa-map-marked-alt" style="color: #ff5a5f; font-size: 24px;"></i>
+      </div>
+      <span class="ms-2 fw-bold brand-text">WanderLust</span>
+    </a>
+
+    <!-- Center Search Bar (Desktop) -->
+    <div class="d-none d-lg-flex mx-auto">
+      <div class="modern-search-bar">
+        <div class="search-field" data-field="where">
+          <label>Where</label>
+          <span class="value">Search destinations</span>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" data-field="when">
+          <label>Check in</label>
+          <span class="value">Add dates</span>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" data-field="checkout">
+          <label>Check out</label>
+          <span class="value">Add dates</span>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" data-field="who">
+          <label>Who</label>
+          <span class="value">Add guests</span>
+        </div>
+        <button class="search-icon-btn">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Side Menu -->
+    <div class="d-flex align-items-center gap-2">
+      <!-- Host Link -->
+      <a class="host-link d-none d-md-block" href="/listings/new">
+        Wanderlust your home
+      </a>
+      
+      <!-- Language Button -->
+      <button class="icon-btn" title="Language">
+        <i class="fas fa-globe"></i>
+      </button>
+
+      <!-- Notifications -->
+      <% if (currUser) { %>
+        <div class="position-relative notification-container">
+          <button class="icon-btn notification-btn" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span id="notificationBadge" class="notification-badge">0</span>
+          </button>
+          
+          <!-- Notification Dropdown -->
+          <div class="notification-dropdown">
+            <div class="notification-header">
+              <h6>Notifications</h6>
+              <button class="mark-all-read-btn">Mark all as read</button>
+            </div>
+            <div id="notificationsList" class="notifications-list">
+              <div class="loading">Loading...</div>
+            </div>
+            <div class="notification-footer">
+              <a href="/notifications" class="view-all-btn">View all notifications</a>
+            </div>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Profile Menu -->
+      <div class="dropdown">
+        <button class="profile-btn" data-bs-toggle="dropdown">
+          <i class="fas fa-bars"></i>
+          <div class="profile-avatar">
+            <% if (currUser && currUser.avatar) { %>
+              <img src="<%= currUser.avatar %>" alt="Profile">
+            <% } else { %>
+              <i class="fas fa-user"></i>
+            <% } %>
+          </div>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <% if (!currUser) { %>
+            <li><a class="dropdown-item" href="/signup"><strong>Sign up</strong></a></li>
+            <li><a class="dropdown-item" href="/login">Log in</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/listings/new">Wanderlust your home</a></li>
+            <li><a class="dropdown-item" href="#">Help Center</a></li>
+          <% } else { %>
+            <li><h6 class="dropdown-header">Hi, <%= currUser.username %>!</h6></li>
+            <li><a class="dropdown-item" href="/wishlist">Wishlist</a></li>
+            <li><a class="dropdown-item" href="/notifications">Notifications</a></li>
+            <li><a class="dropdown-item" href="/listings/new">Add listing</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/account">Account</a></li>
+            <li><a class="dropdown-item" href="/settings">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Help</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="/logout">Log out</a></li>
+          <% } %>
+        </ul>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="mobile-toggle d-lg-none" id="mobileMenuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-search">
+      <button class="mobile-search-btn search-btn">
+        <i class="fas fa-search"></i>
+        <span>Where are you going?</span>
+      </button>
+    </div>
+    
+    <div class="mobile-nav-links">
+      <a href="/listings/new" class="mobile-nav-item">
+        <i class="fas fa-home"></i>
+        <span>Host your home</span>
+      </a>
+      <% if (currUser) { %>
+        <a href="/wishlist" class="mobile-nav-item">
+          <i class="fas fa-heart"></i>
+          <span>Wishlist</span>
+        </a>
+        <a href="/notifications" class="mobile-nav-item">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+          <span id="mobileNotificationBadge" class="mobile-badge">0</span>
+        </a>
+      <% } %>
+    </div>
+    
+    <div class="mobile-auth">
+      <% if (!currUser) { %>
+        <a href="/signup" class="mobile-auth-btn primary">Sign up</a>
+        <a href="/login" class="mobile-auth-btn secondary">Log in</a>
+      <% } else { %>
+        <a href="/logout" class="mobile-auth-btn danger">Log out</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
+
+<!-- Search Popup -->
+<div id="searchPopup" class="search-popup">
+  <div class="search-popup-content">
+    <button id="closeSearch" class="close-btn">&times;</button>
+    
+    <div class="search-form">
+      <div class="search-field">
+        <label>Where</label>
+        <input type="text" id="whereInput" placeholder="Search destinations">
+        <div class="suggested-places">
+          <span class="place-tag" data-place="Paris">Paris</span>
+          <span class="place-tag" data-place="Tokyo">Tokyo</span>
+          <span class="place-tag" data-place="New York">New York</span>
+          <span class="place-tag" data-place="London">London</span>
+        </div>
+      </div>
+      
+      <div class="search-field">
+        <label>Check-in</label>
+        <input type="date" name="checkin">
+      </div>
+      
+      <div class="search-field">
+        <label>Check-out</label>
+        <input type="date" name="checkout">
+      </div>
+      
+      <div class="search-field">
+        <label>Guests</label>
+        <div class="guest-counters">
+          <div class="counter-row">
+            <span>Adults</span>
+            <div class="counter">
+              <button class="counter-btn" data-type="adults" data-dir="minus">-</button>
+              <span id="adults" class="counter-val">0</span>
+              <button class="counter-btn" data-type="adults" data-dir="plus">+</button>
+            </div>
+          </div>
+          <div class="counter-row">
+            <span>Children</span>
+            <div class="counter">
+              <button class="counter-btn" data-type="children" data-dir="minus">-</button>
+              <span id="children" class="counter-val">0</span>
+              <button class="counter-btn" data-type="children" data-dir="plus">+</button>
+            </div>
+          </div>
+          <div class="counter-row">
+            <span>Infants</span>
+            <div class="counter">
+              <button class="counter-btn" data-type="infants" data-dir="minus">-</button>
+              <span id="infants" class="counter-val">0</span>
+              <button class="counter-btn" data-type="infants" data-dir="plus">+</button>
+            </div>
+          </div>
+          <div class="counter-row">
+            <span>Pets</span>
+            <div class="counter">
+              <button class="counter-btn" data-type="pets" data-dir="minus">-</button>
+              <span id="pets" class="counter-val">0</span>
+              <button class="counter-btn" data-type="pets" data-dir="plus">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="search-actions">
+        <button id="clearBtn" class="btn-clear">Clear all</button>
+        <button id="searchBtn" class="btn-search">Search</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Modern Navbar Styles */
+#mainNav {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1030;
+}
+
+#mainNav.scrolled {
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand */
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #222 !important;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+  transform: translateY(-1px);
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff5a5f, #ff385c);
+  border-radius: 8px;
+  color: white !important;
+}
+
+/* Modern Search Bar */
+.modern-search-bar {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 40px;
+  padding: 8px 8px 8px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  min-width: 500px;
+}
+
+.modern-search-bar:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #222;
+}
+
+.search-field {
+  flex: 1;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 32px;
+  transition: background 0.2s ease;
+}
+
+.search-field:hover {
+  background: #f7f7f7;
+}
+
+.search-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.search-field .value {
+  font-size: 14px;
+  color: #717171;
+}
+
+.search-divider {
+  width: 1px;
+  height: 32px;
+  background: #ddd;
+}
+
+.search-icon-btn {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #ff5a5f, #ff385c);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-left: 8px;
+}
+
+.search-icon-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 90, 95, 0.4);
+}
+
+/* Host Link */
+.host-link {
+  color: #222;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 24px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.host-link:hover {
+  background: #f7f7f7;
+  color: #222;
+}
+
+/* Icon Buttons */
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #717171;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.icon-btn:hover {
+  background: #f7f7f7;
+  color: #222;
+  transform: translateY(-1px);
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff5a5f;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  display: none;
+}
+
+/* Notification Dropdown */
+.notification-container {
+  position: relative;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e0e0e0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.notification-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.notification-header h6 {
+  margin: 0;
+  font-weight: 600;
+  color: #222;
+}
+
+.mark-all-read-btn {
+  background: none;
+  border: none;
+  color: #ff5a5f;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.notifications-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.notification-item:hover {
+  background: #f8f9fa;
+}
+
+.notification-item.unread {
+  background: #f8f9ff;
+}
+
+.notification-content h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #222;
+}
+
+.notification-content p {
+  font-size: 13px;
+  color: #717171;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.notification-content small {
+  font-size: 11px;
+  color: #999;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 8px;
+  height: 8px;
+  background: #ff5a5f;
+  border-radius: 50%;
+}
+
+.notification-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.view-all-btn {
+  color: #ff5a5f;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.view-all-btn:hover {
+  color: #e04e53;
+  text-decoration: underline;
+}
+
+.no-notifications {
+  padding: 40px 20px;
+  text-align: center;
+  color: #717171;
+  font-size: 14px;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #717171;
+  font-size: 14px;
+}
+
+/* Profile Button */
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 24px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.profile-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar i {
+  color: #717171;
+  font-size: 16px;
+}
+
+/* Mobile Toggle */
+.mobile-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.mobile-toggle span {
+  width: 20px;
+  height: 2px;
+  background: #222;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #ddd;
+  padding: 24px;
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu.show {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-search-btn {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.mobile-search-btn:hover {
+  border-color: #222;
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  color: #222;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mobile-nav-item:hover {
+  background: #f7f7f7;
+  color: #222;
+}
+
+.mobile-badge {
+  position: absolute;
+  right: 16px;
+  background: #ff5a5f;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 12px;
+  display: none;
+}
+
+.mobile-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-auth-btn {
+  padding: 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.mobile-auth-btn.primary {
+  background: linear-gradient(135deg, #ff5a5f, #ff385c);
+  color: white;
+}
+
+.mobile-auth-btn.secondary {
+  border: 1px solid #ddd;
+  color: #222;
+  background: white;
+}
+
+.mobile-auth-btn.danger {
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  background: white;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  padding: 8px;
+  min-width: 240px;
+  margin-top: 8px;
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #f7f7f7;
+}
+
+.dropdown-header {
+  color: #222;
+  font-weight: 600;
+  padding: 12px 16px 8px;
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+  .modern-search-bar {
+    display: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .container-fluid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .host-link {
+    display: none !important;
+  }
+}
+
+/* Search Popup Styles */
+.search-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.search-popup.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.search-popup-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+}
+
+.search-popup.show .search-popup-content {
+  transform: translateY(0);
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #717171;
+}
+
+.search-form {
+  display: grid;
+  gap: 24px;
+}
+
+.search-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.search-field input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.suggested-places {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.place-tag {
+  background: #f7f7f7;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.place-tag:hover {
+  background: #e0e0e0;
+}
+
+.guest-counters {
+  display: grid;
+  gap: 16px;
+}
+
+.counter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.counter-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.counter-btn:hover {
+  border-color: #222;
+}
+
+.counter-val {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.search-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.btn-clear {
+  background: none;
+  border: none;
+  color: #717171;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-search {
+  background: #ff5a5f;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-search:hover {
+  background: #e04e53;
+}
+
+/* Responsive Design */
+@media (max-width: 991.98px) {
+  .brand-text {
+    display: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .container-fluid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .search-popup-content {
+    padding: 24px;
+    width: 95%;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Mobile menu toggle
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (mobileMenuToggle && mobileMenu) {
+    mobileMenuToggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      mobileMenu.classList.toggle('show');
+    });
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!mobileMenuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.remove('show');
+      }
+    });
+  }
+  
+  // Search field interactions
+  const searchFields = document.querySelectorAll('.search-field');
+  searchFields.forEach(field => {
+    field.addEventListener('click', function() {
+      // Trigger search popup
+      const searchPopup = document.getElementById('searchPopup');
+      if (searchPopup) {
+        searchPopup.classList.add('show');
+      }
+    });
+  });
+  
+  // Search icon button
+  const searchIconBtn = document.querySelector('.search-icon-btn');
+  if (searchIconBtn) {
+    searchIconBtn.addEventListener('click', function() {
+      const searchPopup = document.getElementById('searchPopup');
+      if (searchPopup) {
+        searchPopup.classList.add('show');
+      }
+    });
+  }
+  
+  // Update notification badges
+  function updateNotificationBadges() {
+    const badge = document.getElementById('notificationBadge');
+    const mobileBadge = document.getElementById('mobileNotificationBadge');
+    
+    if (badge && mobileBadge) {
+      const count = badge.textContent || '0';
+      if (count !== '0') {
+        badge.style.display = 'block';
+        mobileBadge.style.display = 'block';
+        mobileBadge.textContent = count;
+      }
+    }
+  }
+  
+  // Initialize notification badges
+  setTimeout(updateNotificationBadges, 1000);
+});
+</script>

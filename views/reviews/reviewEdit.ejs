@@ -1,0 +1,21 @@
+<%- layout('/layouts/boilerplate') %>
+  <div class="container form-container">
+    <h3>Edit Review</h3>
+    <form action="/listings/<%= listingId %>/reviews/<%= review._id %>?_method=PUT" method="POST">
+      <div class="mb-3">
+        <label class="form-label">Rating</label>
+        <fieldset class="star-rating">
+          <% for(let i=5;i>=1;i--){ %>
+            <input type="radio" id="star<%=i%>" name="review[rating]" value="<%=i%>" <%=review.rating==i?'checked':''
+              %>>
+            <label for="star<%=i%>"></label>
+            <% } %>
+        </fieldset>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Comment</label>
+        <textarea name="review[comment]" class="form-control" required><%= review.comment %></textarea>
+      </div>
+      <button class="btn btn-dark">Update</button>
+    </form>
+  </div>
