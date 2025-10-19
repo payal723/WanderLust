@@ -1,6 +1,8 @@
 # WanderLust 🏠
-
 A full-stack web application for listing and booking accommodations, built with Node.js, Express, MongoDB, and EJS.
+
+## Live Demo
+https://wanderlust-1-1yzr.onrender.com
 
 ## Features ✨
 
@@ -127,10 +129,6 @@ Detailed view with images, amenities, and booking options
 
 ### User Dashboard
 Manage your listings and bookings
-
-## License 📄
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
 ## Acknowledgments 🙏
